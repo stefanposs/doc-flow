@@ -6,6 +6,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -22,12 +25,5 @@ jobs:
         run: |
           pip install mkdocs mkdocs-material mkdocs-minify-plugin mkdocstrings[python]
 
-      - name: Build documentation
-        run: mkdocs build --config-file mkdocs.yml
-
-      - name: Commit and push docs
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: 'docs'
-          message: 'Update built docs'
-          default_author: github_actions
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --config-file mkdocs.yml --force
