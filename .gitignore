@@ -55,8 +55,7 @@ docker/data/
 /data/
 
 # MkDocs build output (generated)
-docs/*
-!docs/.gitkeep
+
 
 
 # Misc
