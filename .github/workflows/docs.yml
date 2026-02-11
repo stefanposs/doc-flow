@@ -1,0 +1,33 @@
+# GitHub Actions workflow for deploying mkdocs documentation to GitHub Pages
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install mkdocs mkdocs-material mkdocstrings[python]
+
+      - name: Build documentation
+        run: mkdocs build --config-file mkdocs.yml
+
+      - name: Commit and push docs
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'docs'
+          message: 'Update built docs'
+          default_author: github_actions
