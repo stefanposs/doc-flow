@@ -5,7 +5,6 @@ Formats extracted text into clean Markdown with optional metadata header.
 
 from __future__ import annotations
 
-import re
 from typing import Any
 
 from docflow.domain.models import OutputFormat, ProcessingResult

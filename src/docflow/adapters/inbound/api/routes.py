@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from fastapi import APIRouter, HTTPException, Request, UploadFile
 from fastapi.responses import PlainTextResponse
 
@@ -12,8 +14,10 @@ from docflow.adapters.inbound.api.schemas import (
     FormatsResponse,
     HealthResponse,
 )
-from docflow.application.service import DocumentService
 from docflow.domain.models import DocumentStatus, ExtractionEngine, OCREngine, OutputFormat
+
+if TYPE_CHECKING:
+    from docflow.application.service import DocumentService
 
 router = APIRouter()
 

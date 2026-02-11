@@ -7,9 +7,17 @@ Each adapter implements one or more of these ports.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from docflow.domain.models import ExtractionResult, OutputFormat, ProcessingResult
+if TYPE_CHECKING:
+    from docflow.domain.models import (
+        ExtractionResult,
+        Job,
+        JobFilter,
+        OutputFormat,
+        PaginatedResult,
+        ProcessingResult,
+    )
 
 
 class ExtractorPort(ABC):
@@ -163,3 +171,192 @@ class StoragePort(ABC):
         Returns:
             True if the file exists.
         """
+
+
+# ─── Queue Port ──────────────────────────────────────────────
+
+
+class QueuePort(ABC):
+    """Port for message queue (Redis Streams, PubSub, Azure Service Bus, etc.).
+
+    Implementations: InMemoryQueue, RedisQueue
+    """
+
+    @abstractmethod
+    async def enqueue(self, queue_name: str, payload: dict[str, Any]) -> str:
+        """Put a message on the queue.
+
+        Returns:
+            Message ID.
+        """
+
+    @abstractmethod
+    async def dequeue(self, queue_name: str, timeout: float = 0) -> tuple[str, dict[str, Any]] | None:
+        """Get the next message from the queue.
+
+        Args:
+            queue_name: Queue to consume from.
+            timeout: Seconds to wait (0 = non-blocking).
+
+        Returns:
+            (message_id, payload) or None if empty.
+        """
+
+    @abstractmethod
+    async def acknowledge(self, queue_name: str, message_id: str) -> None:
+        """Acknowledge successful processing of a message."""
+
+    @abstractmethod
+    async def reject(self, queue_name: str, message_id: str) -> None:
+        """Reject a message (return to queue or dead-letter)."""
+
+    @abstractmethod
+    async def queue_length(self, queue_name: str) -> int:
+        """Return the approximate number of messages in the queue."""
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """Initialize connection (called on startup)."""
+
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """Teardown connection (called on shutdown)."""
+
+
+# ─── Cache Port ──────────────────────────────────────────────
+
+
+class CachePort(ABC):
+    """Port for caching (Redis, Memcached, local dict, etc.).
+
+    Used for rate limiting, deduplication, and result caching.
+    Implementations: InMemoryCache, RedisCache
+    """
+
+    @abstractmethod
+    async def get(self, key: str) -> str | None:
+        """Get a cached value by key."""
+
+    @abstractmethod
+    async def set(self, key: str, value: str, ttl: int | None = None) -> None:
+        """Set a cached value with optional TTL in seconds."""
+
+    @abstractmethod
+    async def delete(self, key: str) -> None:
+        """Delete a cached value."""
+
+    @abstractmethod
+    async def exists(self, key: str) -> bool:
+        """Check if a key exists in the cache."""
+
+    @abstractmethod
+    async def increment(self, key: str) -> int:
+        """Atomically increment a counter. Creates the key with value 1 if missing."""
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """Initialize connection."""
+
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """Teardown connection."""
+
+
+# ─── Blob Storage Port ───────────────────────────────────────
+
+
+class BlobStoragePort(ABC):
+    """Port for cloud-native object storage (S3, GCS, Azure Blob, local).
+
+    Extends basic storage with presigned URLs, listing, and metadata.
+    Implementations: InMemoryBlobStorage, S3BlobStorage, GCSBlobStorage, AzureBlobStorage
+    """
+
+    @abstractmethod
+    async def upload(self, key: str, content: bytes, content_type: str = "application/octet-stream") -> str:
+        """Upload a blob. Returns the storage URI."""
+
+    @abstractmethod
+    async def download(self, key: str) -> bytes:
+        """Download a blob by key."""
+
+    @abstractmethod
+    async def delete(self, key: str) -> None:
+        """Delete a blob."""
+
+    @abstractmethod
+    async def exists(self, key: str) -> bool:
+        """Check if a blob exists."""
+
+    @abstractmethod
+    async def list_blobs(self, prefix: str = "") -> list[str]:
+        """List blob keys with an optional prefix filter."""
+
+    @abstractmethod
+    async def get_metadata(self, key: str) -> dict[str, str]:
+        """Get metadata for a blob (content_type, size, etc.)."""
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """Initialize connection."""
+
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """Teardown connection."""
+
+
+# ─── Job Repository Port ─────────────────────────────────────
+
+
+class JobRepositoryPort(ABC):
+    """Port for job state persistence.
+
+    Implementations: InMemoryJobRepository, RedisJobRepository
+    """
+
+    @abstractmethod
+    async def save(self, job: Job) -> None:
+        """Save or update a job."""
+
+    @abstractmethod
+    async def get(self, job_id: str) -> Job | None:
+        """Get a job by ID. Returns None if not found."""
+
+    @abstractmethod
+    async def list_jobs(
+        self,
+        filter_: JobFilter | None = None,
+        page: int = 1,
+        page_size: int = 50,
+    ) -> PaginatedResult:
+        """List jobs with optional filters and pagination."""
+
+    @abstractmethod
+    async def delete(self, job_id: str) -> bool:
+        """Delete a job. Returns True if deleted."""
+
+    @abstractmethod
+    async def count(self, filter_: JobFilter | None = None) -> int:
+        """Count jobs matching the filter."""
+
+
+# ─── Metrics Port ────────────────────────────────────────────
+
+
+class MetricsPort(ABC):
+    """Port for observability metrics (Prometheus, Datadog, etc.).
+
+    Implementations: NoOpMetrics, PrometheusMetrics
+    """
+
+    @abstractmethod
+    def counter(self, name: str, value: float = 1, tags: dict[str, str] | None = None) -> None:
+        """Increment a counter."""
+
+    @abstractmethod
+    def histogram(self, name: str, value: float, tags: dict[str, str] | None = None) -> None:
+        """Record a histogram observation."""
+
+    @abstractmethod
+    def gauge(self, name: str, value: float, tags: dict[str, str] | None = None) -> None:
+        """Set a gauge value."""

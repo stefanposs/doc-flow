@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import mimetypes
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 try:
     import magic
@@ -15,8 +15,6 @@ except (ImportError, OSError):
 
 import structlog
 
-from docflow.application.config import Settings
-from docflow.application.pipeline import ProcessingPipeline
 from docflow.domain.models import (
     Document,
     DocumentMetadata,
@@ -24,6 +22,10 @@ from docflow.domain.models import (
     OCREngine,
     OutputFormat,
 )
+
+if TYPE_CHECKING:
+    from docflow.application.config import Settings
+    from docflow.application.pipeline import ProcessingPipeline
 
 logger = structlog.get_logger()
 

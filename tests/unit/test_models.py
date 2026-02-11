@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from docflow.domain.models import Document, DocumentMetadata, DocumentStatus, OutputFormat
 
 

@@ -33,7 +33,7 @@ class TesseractOCR(OCRPort):
 
     def _recognize_sync(self, image_content: bytes, language: str) -> str:
         """Synchronous Tesseract OCR."""
-        import pytesseract  # type: ignore[import-untyped]
+        import pytesseract
         from PIL import Image
 
         image = Image.open(io.BytesIO(image_content))

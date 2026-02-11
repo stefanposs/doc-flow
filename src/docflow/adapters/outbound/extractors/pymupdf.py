@@ -32,7 +32,7 @@ class PyMuPDFExtractor(ExtractorPort):
 
     def _extract_sync(self, file_content: bytes) -> ExtractionResult:
         """Synchronous extraction using PyMuPDF."""
-        import fitz  # type: ignore[import-untyped]
+        import fitz
 
         doc = fitz.open(stream=file_content, filetype="pdf")
         pages: list[str] = []

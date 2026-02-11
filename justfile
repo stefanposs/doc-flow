@@ -24,7 +24,7 @@ setup-prod:
 # ============================================================================
 
 # Run all tests
-test: test-unit
+test: test-unit test-e2e
     @echo "✅ All tests passed!"
 
 # Run unit tests with coverage
@@ -35,9 +35,13 @@ test-unit:
 test-integration:
     uv run pytest tests/integration/ -v
 
+# Run E2E tests (in-memory adapters, no external services)
+test-e2e:
+    uv run pytest tests/e2e/ -v -m e2e
+
 # Run tests like CI does
 test-ci:
-    uv run pytest tests/unit/ -v --cov=src/docflow --cov-report=xml --junitxml=junit.xml
+    uv run pytest tests/unit/ tests/e2e/ -v --cov=src/docflow --cov-report=xml --junitxml=junit.xml
 
 # ============================================================================
 # Code Quality

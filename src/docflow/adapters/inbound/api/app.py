@@ -6,7 +6,7 @@ Creates the app with all routes, middleware, and dependency injection.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import TYPE_CHECKING
 
 import structlog
 from fastapi import FastAPI
@@ -14,8 +14,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from docflow import __version__
 from docflow.adapters.inbound.api.dependencies import setup_dependencies
+from docflow.adapters.inbound.api.job_routes import job_router
 from docflow.adapters.inbound.api.routes import router
 from docflow.application.config import Settings, get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 logger = structlog.get_logger()
 
@@ -38,7 +42,7 @@ def configure_logging(settings: Settings) -> None:
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(
-            structlog.stdlib._NAME_TO_LEVEL.get(settings.log_level.lower(), 20),  # noqa: SLF001
+            structlog.stdlib._NAME_TO_LEVEL.get(settings.log_level.lower(), 20),  # type: ignore[attr-defined]
         ),
         context_class=dict,
         logger_factory=structlog.PrintLoggerFactory(),
@@ -57,12 +61,30 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         version=__version__,
         env=settings.env,
         log_level=settings.log_level,
+        async_mode=settings.async_mode,
     )
 
     # Wire up dependency injection
     setup_dependencies(app, settings)
 
+    # Connect infrastructure adapters
+    await app.state.queue.connect()
+    await app.state.cache.connect()
+    await app.state.blob.connect()
+
+    # Start worker pool (async job processing)
+    if settings.async_mode:
+        await app.state.worker_pool.start()
+
     yield
+
+    # Graceful shutdown
+    if settings.async_mode:
+        await app.state.worker_pool.stop()
+
+    await app.state.queue.disconnect()
+    await app.state.cache.disconnect()
+    await app.state.blob.disconnect()
 
     logger.info("docflow.shutdown")
 
@@ -73,7 +95,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="DocFlow",
-        description="End-to-End Document Text Extraction Pipeline",
+        description="End-to-End Document Text Extraction Pipeline — Enterprise Edition",
         version=__version__,
         docs_url="/api/docs",
         redoc_url="/api/redoc",
@@ -92,5 +114,6 @@ def create_app() -> FastAPI:
 
     # Routes
     app.include_router(router, prefix="/api/v1")
+    app.include_router(job_router, prefix="/api/v1")
 
     return app

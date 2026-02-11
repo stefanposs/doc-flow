@@ -50,7 +50,7 @@ class TestExtractorRouter:
 class TestProcessingPipeline:
     """Tests for ProcessingPipeline."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def pipeline(self) -> ProcessingPipeline:
         """Create a pipeline with fakes."""
         router = ExtractorRouter({"tika": FakeExtractor()})
@@ -61,7 +61,7 @@ class TestProcessingPipeline:
             formatters={OutputFormat.MARKDOWN: FakeFormatter()},
         )
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_full_pipeline(self, pipeline: ProcessingPipeline) -> None:
         """Pipeline should extract, process, and format."""
         doc = Document(output_format=OutputFormat.MARKDOWN, ocr_engine=OCREngine.NONE)
@@ -72,7 +72,7 @@ class TestProcessingPipeline:
         assert result.processing_time_ms is not None
         assert result.processing_time_ms >= 0
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_pipeline_applies_processors(self, pipeline: ProcessingPipeline) -> None:
         """Pipeline should apply post-processors."""
         doc = Document(output_format=OutputFormat.MARKDOWN, ocr_engine=OCREngine.NONE)
@@ -82,7 +82,7 @@ class TestProcessingPipeline:
         assert result.processed_content is not None
         assert "[processed]" in result.processed_content
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_pipeline_handles_failure(self) -> None:
         """Pipeline should catch exceptions and mark document failed."""
 

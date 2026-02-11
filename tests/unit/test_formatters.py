@@ -15,7 +15,7 @@ from docflow.domain.models import OutputFormat
 class TestMarkdownFormatter:
     """Tests for MarkdownFormatter."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_format_basic_text(self) -> None:
         """Should output text as markdown."""
         formatter = MarkdownFormatter(include_metadata=False)
@@ -23,7 +23,7 @@ class TestMarkdownFormatter:
         assert result.format == OutputFormat.MARKDOWN
         assert "Hello world" in result.content
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_format_with_metadata(self) -> None:
         """Should include YAML front matter when metadata provided."""
         formatter = MarkdownFormatter(include_metadata=True)
@@ -32,7 +32,7 @@ class TestMarkdownFormatter:
         assert "title: My Doc" in result.content
         assert "author: Test" in result.content
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_uppercase_lines_become_headers(self) -> None:
         """Should convert ALL CAPS lines to markdown headers."""
         formatter = MarkdownFormatter(include_metadata=False)
@@ -47,7 +47,7 @@ class TestMarkdownFormatter:
 class TestJSONFormatter:
     """Tests for JSONFormatter."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_format_as_json(self) -> None:
         """Should output valid JSON with content and metadata."""
         formatter = JSONFormatter()
@@ -63,7 +63,7 @@ class TestJSONFormatter:
 class TestPlainTextFormatter:
     """Tests for PlainTextFormatter."""
 
-    @pytest.mark.asyncio()
+    @pytest.mark.asyncio
     async def test_format_passthrough(self) -> None:
         """Should return text unchanged."""
         formatter = PlainTextFormatter()

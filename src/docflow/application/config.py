@@ -5,7 +5,14 @@ from __future__ import annotations
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from docflow.domain.models import ExtractionEngine, OCREngine, OutputFormat
+from docflow.domain.models import (
+    BlobBackend,
+    CacheBackend,
+    ExtractionEngine,
+    OCREngine,
+    OutputFormat,
+    QueueBackend,
+)
 
 
 class Settings(BaseSettings):
@@ -29,6 +36,10 @@ class Settings(BaseSettings):
     workers: int = 4
     max_file_size_mb: int = 100
 
+    # ─── Async Mode ──────────────────────────────────────────
+    async_mode: bool = True  # Enable async job processing
+    worker_concurrency: int = 8  # Parallel workers per process
+
     # ─── Extraction ──────────────────────────────────────────
     default_extractor: ExtractionEngine = ExtractionEngine.AUTO
     tika_url: str = "http://localhost:9998"
@@ -40,16 +51,34 @@ class Settings(BaseSettings):
     ocr_language: str = "deu"
     ocr_dpi: int = 300
 
-    # ─── Storage ─────────────────────────────────────────────
+    # ─── Storage (legacy — for existing StoragePort) ─────────
     storage_backend: str = "local"  # local | s3
     storage_path: str = "/data/documents"
 
+    # ─── Blob Storage (new — cloud-native) ───────────────────
+    blob_backend: BlobBackend = BlobBackend.MEMORY
     # S3 / MinIO
     s3_endpoint: str = ""
     s3_bucket: str = "docflow-documents"
     s3_access_key: str = ""
     s3_secret_key: str = ""
     s3_region: str = "eu-central-1"
+    # GCS
+    gcs_bucket: str = "docflow-documents"
+    gcs_project: str = ""
+    # Azure
+    azure_connection_string: str = ""
+    azure_container: str = "docflow-documents"
+
+    # ─── Queue ───────────────────────────────────────────────
+    queue_backend: QueueBackend = QueueBackend.MEMORY
+
+    # ─── Cache ───────────────────────────────────────────────
+    cache_backend: CacheBackend = CacheBackend.MEMORY
+
+    # ─── Redis (shared by queue + cache when backend=redis) ──
+    redis_url: str = "redis://localhost:6379/0"
+    redis_enabled: bool = False
 
     # ─── Processing ──────────────────────────────────────────
     default_output_format: OutputFormat = OutputFormat.MARKDOWN
@@ -60,10 +89,6 @@ class Settings(BaseSettings):
     llm_enabled: bool = False
     llm_provider: str = "openai"  # openai | ollama
     llm_model: str = "gpt-4"
-
-    # ─── Redis (optional) ────────────────────────────────────
-    redis_url: str = "redis://localhost:6379/0"
-    redis_enabled: bool = False
 
     # ─── Security ────────────────────────────────────────────
     api_key: str = ""

@@ -3,24 +3,25 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from docflow.domain.models import (
     Document,
-    DocumentMetadata,
     ExtractionEngine,
     ExtractionResult,
     OCREngine,
     OutputFormat,
 )
-from docflow.domain.ports import (
-    ExtractorPort,
-    OCRPort,
-    OutputFormatterPort,
-    PostProcessorPort,
-)
+
+if TYPE_CHECKING:
+    from docflow.domain.ports import (
+        ExtractorPort,
+        OCRPort,
+        OutputFormatterPort,
+        PostProcessorPort,
+    )
 
 logger = structlog.get_logger()
 
@@ -161,7 +162,7 @@ class ProcessingPipeline:
         except Exception as exc:
             elapsed_ms = int((time.monotonic() - start_time) * 1000)
             document.mark_failed(str(exc))
-            log.error("pipeline.failed", error=str(exc), processing_time_ms=elapsed_ms)
+            log.exception("pipeline.failed", error=str(exc), processing_time_ms=elapsed_ms)
 
         return document
 
