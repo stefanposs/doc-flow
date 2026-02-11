@@ -1,0 +1,74 @@
+# ============================================================
+# DocFlow – .dockerignore
+# ============================================================
+
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv
+venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing & Coverage
+.pytest_cache
+.coverage
+htmlcov/
+.tox
+.nox
+
+# Type checking
+.mypy_cache
+
+# Linting
+.ruff_cache
+
+# Documentation (keep docs out of image)
+docs/
+*.md
+!README.md
+
+# Docker (prevent recursive copy)
+docker/
+Dockerfile
+docker-compose*.yml
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+/data
+*.pdf
+*.docx
+*.xlsx
+
+# CI/CD
+.github/
+
+# Misc
+LICENSE
+Makefile

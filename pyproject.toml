@@ -1,0 +1,140 @@
+[project]
+name = "docflow"
+version = "0.1.0"
+description = "End-to-End Document Text Extraction Pipeline — PDF, Office, Images → Markdown"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+authors = [{ name = "Stefan Poss" }]
+keywords = ["document", "extraction", "ocr", "pdf", "markdown", "pipeline"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Text Processing",
+]
+
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn[standard]>=0.34,<1",
+    "pydantic>=2.10,<3",
+    "pydantic-settings>=2.7,<3",
+    "httpx>=0.28,<1",
+    "python-multipart>=0.0.18,<1",
+    "structlog>=24.4,<26",
+    "python-magic>=0.4,<1",
+]
+
+[project.optional-dependencies]
+tika = []  # Tika uses httpx (already in deps)
+pymupdf = ["pymupdf>=1.25,<2"]
+tesseract = ["pytesseract>=0.3,<1", "Pillow>=11,<12"]
+s3 = ["boto3>=1.35,<2"]
+llm-openai = ["openai>=1.60,<2"]
+llm-ollama = ["ollama>=0.4,<1"]
+all = ["docflow[pymupdf,tesseract,s3,llm-openai,llm-ollama]"]
+dev = [
+    "pytest>=8.3,<9",
+    "pytest-asyncio>=0.24,<1",
+    "pytest-cov>=6,<7",
+    "pytest-xdist>=3.5,<4",
+    "pytest-timeout>=2.3,<3",
+    "respx>=0.22,<1",
+    "ruff>=0.9,<1",
+    "mypy>=1.14,<2",
+    "pre-commit>=4,<5",
+]
+docs = [
+    "mkdocs-material>=9.5,<10",
+    "mkdocs-minify-plugin>=0.8,<1",
+    "mkdocstrings[python]>=0.27,<1",
+]
+
+[project.urls]
+Homepage = "https://github.com/stefanposs/doc-flow"
+Documentation = "https://stefanposs.github.io/doc-flow"
+Repository = "https://github.com/stefanposs/doc-flow"
+Issues = "https://github.com/stefanposs/doc-flow/issues"
+
+[project.scripts]
+docflow = "docflow.adapters.inbound.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/docflow"]
+
+# ─── Ruff ────────────────────────────────────────────────────
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",     # pycodestyle, pyflakes
+    "I",                # isort
+    "N",                # pep8-naming
+    "UP",               # pyupgrade
+    "S",                # bandit (security)
+    "B",                # bugbear
+    "A",                # builtins
+    "C4",               # comprehensions
+    "DTZ",              # datetime timezone
+    "T20",              # print statements
+    "PT",               # pytest style
+    "SIM",              # simplify
+    "TID",              # tidy imports
+    "TCH",              # type checking
+    "ARG",              # unused arguments
+    "PL",               # pylint
+    "TRY",              # tryceratops
+    "PERF",             # performance
+    "RUF",              # ruff-specific
+]
+ignore = ["S101", "TRY003", "PLR0913"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["docflow"]
+
+# ─── mypy ────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+strict = true
+disallow_untyped_defs = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["pytesseract.*", "magic.*", "pymupdf.*", "fitz.*"]
+ignore_missing_imports = true
+
+# ─── pytest ──────────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "unit: Fast tests without external dependencies",
+    "integration: Tests requiring Docker services (Tika, etc.)",
+    "e2e: End-to-end pipeline tests",
+]
+addopts = "--strict-markers --tb=short -q"
+
+[tool.coverage.run]
+source = ["src/docflow"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]

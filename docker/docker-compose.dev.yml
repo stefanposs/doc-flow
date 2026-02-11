@@ -1,0 +1,33 @@
+# ============================================================
+# DocFlow – Docker Compose Development Override
+# ============================================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# ============================================================
+
+services:
+  docflow-api:
+    build:
+      target: runtime  # use runtime stage, but mount source
+    volumes:
+      - ../src:/app/src:ro       # mount source for hot-reload
+      - ../config:/app/config:ro
+      - docflow-data:/data/documents
+    environment:
+      - DOCFLOW_ENV=development
+      - DOCFLOW_LOG_LEVEL=DEBUG
+      - DOCFLOW_LOG_FORMAT=text
+    command: >
+      uvicorn docflow.adapters.inbound.api.app:create_app
+        --factory
+        --host 0.0.0.0
+        --port 8000
+        --reload
+        --reload-dir /app/src
+    deploy:
+      resources:
+        limits:
+          memory: 1G  # more memory for dev
+
+volumes:
+  docflow-data:
+    driver: local

@@ -1,0 +1,55 @@
+# ============================================================
+# DocFlow – Docker Compose Production Override
+# ============================================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ============================================================
+
+services:
+  docflow-api:
+    image: ghcr.io/stefanposs/doc-flow:${DOCFLOW_VERSION:-latest}
+    build: !reset null  # don't build in prod, use pre-built image
+    restart: always
+    environment:
+      - DOCFLOW_ENV=production
+      - DOCFLOW_LOG_LEVEL=INFO
+      - DOCFLOW_LOG_FORMAT=json
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.5"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 5
+        window: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  tika:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  redis:
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
