@@ -39,7 +39,7 @@ llm-openai = ["openai>=1.60,<2"]
 llm-ollama = ["ollama>=0.4,<1"]
 all = ["docflow[pymupdf,tesseract,s3,redis,gcs,azure,llm-openai,llm-ollama]"]
 dev = [
-    "pytest>=8.3,<9",
+    "pytest>=8.3,<10",
     "pytest-asyncio>=0.24,<1",
     "pytest-cov>=6,<7",
     "pytest-xdist>=3.5,<4",
