@@ -32,7 +32,7 @@ tika = []  # Tika uses httpx (already in deps)
 pymupdf = ["pymupdf>=1.25,<2"]
 tesseract = ["pytesseract>=0.3,<1", "Pillow>=11,<12"]
 s3 = ["boto3>=1.35,<2"]
-redis = ["redis>=5,<6"]
+redis = ["redis>=5,<8"]
 gcs = ["google-cloud-storage>=2,<3"]
 azure = ["azure-storage-blob>=12,<13"]
 llm-openai = ["openai>=1.60,<2"]
